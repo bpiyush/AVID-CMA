@@ -52,3 +52,12 @@ class R2Plus1D(nn.Module):
             return {'conv1': x_c1, 'conv2x': x_b1, 'conv3x': x_b2, 'conv4x': x_b3, 'conv5x': x_b4, 'pool': x_pool}
         else:
             return x_pool
+
+
+if __name__ == '__main__':
+    import torch
+
+    model = R2Plus1D(depth=18)
+    x = torch.randn(1, 3, 16, 112, 112)
+    y = model(x)
+    assert y.shape == torch.Size([1, 512, 1, 1, 1])

@@ -6,5 +6,6 @@
 #
 
 from .video import *
+from .video_resnet import r2plus1d_18 as PyTorchR2Plus1D
 from .audio import *
 from .av_wrapper import *
