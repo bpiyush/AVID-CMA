@@ -46,6 +46,10 @@ class Kinetics(VideoDataset):
             if os.path.isfile(os.path.join(DATA_PATH, file_name)):
                     filenames.append(file_name)
                     labels.append(label)
+        
+        print(":::::: Dataset details ::::::")
+        print(f"Subset: {subset}")
+        print(f"Number of samples: {len(filenames)}")
 
         super(Kinetics, self).__init__(
             return_video=return_video,
