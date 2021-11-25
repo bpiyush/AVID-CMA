@@ -86,7 +86,7 @@ def main_worker(gpu, ngpus_per_node, args, cfg):
 
     # Setup environment
     args = main_utils.initialize_distributed_backend(args, ngpus_per_node)
-    logger, tb_writter, model_dir = main_utils.prep_environment(args, cfg)
+    logger, tb_writter, wandb_writter, model_dir = main_utils.prep_environment(args, cfg)
 
     # Define model
     model = main_utils.build_model(cfg['model'], logger)
@@ -133,12 +133,12 @@ def main_worker(gpu, ngpus_per_node, args, cfg):
         # Train for one epoch
         logger.add_line('='*30 + ' Epoch {} '.format(epoch) + '='*30)
         logger.add_line('LR: {}'.format(scheduler.get_lr()))
-        run_phase('train', train_loader, model, optimizer, train_criterion, epoch, args, cfg, logger, tb_writter)
+        run_phase('train', train_loader, model, optimizer, train_criterion, epoch, args, cfg, logger, tb_writter, wandb_writter)
         if epoch % test_freq == 0 or epoch == end_epoch - 1:
             ckp_manager.save(epoch+1, model=model, optimizer=optimizer, train_criterion=train_criterion, filename='ckpt-ep{}.pth.tar'.format(epoch+1))
 
 
-def run_phase(phase, loader, model, optimizer, criterion, epoch, args, cfg, logger, tb_writter):
+def run_phase(phase, loader, model, optimizer, criterion, epoch, args, cfg, logger, tb_writter, wandb_writter):
     from utils import metrics_utils
     logger.add_line('\n{}: Epoch {}'.format(phase, epoch))
     batch_time = metrics_utils.AverageMeter('Time', ':6.3f', window_size=100)
@@ -187,9 +187,18 @@ def run_phase(phase, loader, model, optimizer, criterion, epoch, args, cfg, logg
         step = epoch * len(loader) + i
         if (i+1) % cfg['print_freq'] == 0 or i == 0 or i+1 == len(loader):
             progress.display(i+1)
+
             if tb_writter is not None:
                 for key in loss_debug:
                     tb_writter.add_scalar('{}-batch/{}'.format(phase, key), loss_debug[key].item(), step)
+
+            # wandb logging
+            if wandb_writter is not None:
+                for key in loss_debug:
+                    loss_value = loss_debug[key]
+                    if isinstance(loss_value, torch.Tensor):
+                        loss_value = loss_value.item()
+                    wandb_writter({'{}-batch/{}'.format(phase, key): loss_value, "epoch": epoch}, step=step)
 
     # Sync metrics across all GPUs and print final averages
     if args.distributed:

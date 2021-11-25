@@ -32,7 +32,6 @@ def initialize_distributed_backend(args, ngpus_per_node):
 
 
 def prep_environment(args, cfg):
-    from torch.utils.tensorboard import SummaryWriter
 
     # Prepare loggers (must be configured after initialize_distributed_backend())
     model_dir = '{}/{}'.format(cfg['model']['model_dir'], cfg['model']['name'])
@@ -64,11 +63,21 @@ def prep_environment(args, cfg):
 
     tb_writter = None
     if cfg['log2tb'] and args.rank == 0:
+        from torch.utils.tensorboard import SummaryWriter
         tb_dir = '{}/tensorboard'.format(model_dir)
         os.system('mkdir -p {}'.format(tb_dir))
         tb_writter = SummaryWriter(tb_dir)
+    
+    wandb_writter = None
+    if cfg["log2wandb"] and args.rank == 0:
+        import wandb
+        import time
+        wandb.init(name="AVID-CMA/" + cfg["model"]["name"], project="video-ssl", entity="uva-vislab")
+        wandb.config.update({**cfg, **vars(args)})
+        wandb_writter = wandb.log
+        time.sleep(10) # time to copy/open W&B link
 
-    return logger, tb_writter, model_dir
+    return logger, tb_writter, wandb_writter, model_dir
 
 
 def build_model(cfg, logger=None):
