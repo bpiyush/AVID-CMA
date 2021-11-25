@@ -24,6 +24,8 @@ dataset:
   spectrogram_fps: 100.
   n_fft: 512
   transforms: "msc+color"
+  debug: true
+  debug_samples: 1000
   train:
     split: "train"
     use_augmentation: true
@@ -45,7 +47,7 @@ optimizer:
     milestones: [5, 10, 15, 20, 25, 30]
 
 model:
-  name: "Cross-N1024"
+  name: "cross_16x112x112_pytorch_r2+1d"
   model_dir: "checkpoints/AVID/Kinetics"
   arch: "av_wrapper"
   args:

@@ -211,6 +211,11 @@ def build_dataloader(db_cfg, split_cfg, num_workers, distributed):
         clips_per_video=clips_per_video,
     )
 
+    debug = db_cfg.get("debug", False)
+    debug_samples = db_cfg.get("debug_samples", 1000)
+    if debug:
+        db = torch.utils.data.Subset(db, list(range(debug_samples)))
+
     if distributed:
         sampler = torch.utils.data.distributed.DistributedSampler(db)
     else:

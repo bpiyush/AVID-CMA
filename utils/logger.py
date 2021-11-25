@@ -71,10 +71,10 @@ class ProgressMeter(object):
         return epoch_str+'[' + fmt + '/' + fmt.format(num_batches) + ']'
 
     def synchronize_meters(self, cur_gpu):
-        metrics = torch.tensor([m.avg for m in self.progress.meters]).cuda(cur_gpu)
+        metrics = torch.tensor([m.avg for m in self.meters]).cuda(cur_gpu)
         metrics_gather = [torch.ones_like(metrics) for _ in range(dist.get_world_size())]
         dist.all_gather(metrics_gather, metrics)
 
         metrics = torch.stack(metrics_gather).mean(0).cpu().numpy()
-        for meter, m in zip(self.progress.meters, metrics):
+        for meter, m in zip(self.meters, metrics):
             meter.avg = m

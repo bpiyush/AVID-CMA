@@ -135,7 +135,7 @@ def main_worker(gpu, ngpus_per_node, args, cfg):
         logger.add_line('LR: {}'.format(scheduler.get_lr()))
         run_phase('train', train_loader, model, optimizer, train_criterion, epoch, args, cfg, logger, tb_writter)
         if epoch % test_freq == 0 or epoch == end_epoch - 1:
-            ckp_manager.save(epoch+1, model=model, optimizer=optimizer, train_criterion=train_criterion)
+            ckp_manager.save(epoch+1, model=model, optimizer=optimizer, train_criterion=train_criterion, filename='ckpt-ep{}.pth.tar'.format(epoch+1))
 
 
 def run_phase(phase, loader, model, optimizer, criterion, epoch, args, cfg, logger, tb_writter):
